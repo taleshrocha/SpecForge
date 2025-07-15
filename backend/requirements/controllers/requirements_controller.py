@@ -8,7 +8,7 @@ from backend.requirements.models.requirement import Requirement
 from backend.requirements.services.requirements_service import RequirementsService
 
 
-router = APIRouter(prefix="/requirements", tags=["requirements"])
+router = APIRouter(prefix="/requirement", tags=["requirement"])
 
 @router.post("", response_model=Requirement)
 async def create_requirement(requirement: RequirementDTO):
