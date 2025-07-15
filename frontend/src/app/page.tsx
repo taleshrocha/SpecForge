@@ -5,14 +5,7 @@ import { useGetAllRequirements } from "./requirements/tanstack/queries/use-get-a
 
 export default function Home() {
   const { data: requirements, isLoading, error } = useGetAllRequirements()
-  
-  const memoizedRequirements = useMemo(() => {
-    if (requirements) {
-      console.log('All requirements data:', requirements)
-      return requirements
-    }
-    return []
-  }, [requirements])
+      console.log('requirements', requirements)
   
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error loading requirements</div>
@@ -21,9 +14,9 @@ export default function Home() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
     <div>
       <h1>Requirements Page</h1>
-      <p>Total requirements: {memoizedRequirements.length}</p>
-      {memoizedRequirements.length > 0 && (
-        <pre>{JSON.stringify(memoizedRequirements, null, 2)}</pre>
+      <p>Total requirements: {requirements?.length}</p>
+      {requirements && requirements.length > 0 && (
+        <pre>{JSON.stringify(requirements, null, 2)}</pre>
       )}
     </div>
 
