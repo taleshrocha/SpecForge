@@ -1,7 +1,11 @@
 """Requirement DTO definitions for API requests and responses."""
 
-from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List
+from pydantic import BaseModel, Field
+
+from backend.requirements.dtos.requirement_attributes_dto import RequirementAttributesDTO
+from backend.requirements.enums.requirement_status import RequirementStatus
+from backend.requirements.enums.requirement_type import RequirementType
 
 
 class RequirementDTO(BaseModel):
@@ -10,7 +14,7 @@ class RequirementDTO(BaseModel):
     title: str
     description: str
     stakeholders: List[str]
-    type: str  # funcional, não-funcional
-    attributes: Dict[str, Any]  # prioridade, risco, etc.
+    type: RequirementType
+    attributes: RequirementAttributesDTO
     version: str
-    status: str = "rascunho"
+    status: RequirementStatus = Field(default=RequirementStatus.DRAFT)

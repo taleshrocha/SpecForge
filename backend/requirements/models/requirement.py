@@ -1,21 +1,20 @@
 """Requirement model definition."""
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Dict, Any
-from datetime import datetime
+from typing import List, Optional
+from bson import ObjectId
 
-from ...core.models import PyObjectId
-from ..dtos.requirement_dto import RequirementDTO
+from backend.core.models.base_model import BaseModel
+from backend.requirements.enums.requirement_status import RequirementStatus
+from backend.requirements.enums.requirement_type import RequirementType
+from backend.requirements.models.requirement_attributes import RequirementAttributes
 
-
-class Requirement(RequirementDTO):
+class Requirement(BaseModel):
     """Requirement model representing a software requirement."""
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_encoders={PyObjectId: str}
-    )
-    
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    _id: Optional[ObjectId] = None
+    title: str
+    description: str
+    stakeholders: List[str]
+    type: RequirementType
+    attributes: RequirementAttributes
+    version: str
+    status: RequirementStatus = RequirementStatus.DRAFT

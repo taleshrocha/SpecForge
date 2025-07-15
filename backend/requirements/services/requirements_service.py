@@ -3,9 +3,10 @@
 from typing import List, Optional
 from bson import ObjectId
 
-from ...database import get_database
-from ..models.requirement import Requirement
-from ..dtos.requirement_dto import RequirementDTO
+from backend.requirements.models.requirement import Requirement
+from backend.config.database import get_database
+from backend.requirements.dtos.requirement_dto import RequirementDTO
+
 
 
 class RequirementsService:
@@ -31,10 +32,10 @@ class RequirementsService:
         Raises:
             Exception: When database operation fails.
         """
-        requirement_dict = requirement_data.dict()
+        requirement_dict = requirement_data.model_dump()
         result = await self.db.requirements.insert_one(requirement_dict)
-        created_requirement = await self.db.requirements.find_one({"_id": result.inserted_id})
-        return created_requirement
+        created_requirement_doc = await self.db.requirements.find_one({"_id": result.inserted_id})
+        return Requirement(**created_requirement_doc)
     
     async def get_all_requirements(self) -> List[Requirement]:
         """Retrieve all requirements from the database.
@@ -43,8 +44,8 @@ class RequirementsService:
             List of all requirements.
         """
         requirements = []
-        async for requirement in self.db.requirements.find():
-            requirements.append(requirement)
+        async for requirement_doc in self.db.requirements.find():
+            requirements.append(Requirement(**requirement_doc))
         return requirements
     
     async def get_requirement_by_id(self, requirement_id: str) -> Optional[Requirement]:
@@ -62,5 +63,7 @@ class RequirementsService:
         if not ObjectId.is_valid(requirement_id):
             raise ValueError("Invalid requirement ID format")
         
-        requirement = await self.db.requirements.find_one({"_id": ObjectId(requirement_id)})
-        return requirement
+        requirement_doc = await self.db.requirements.find_one({"_id": ObjectId(requirement_id)})
+        if requirement_doc:
+            return Requirement(**requirement_doc)
+        return None

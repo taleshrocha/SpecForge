@@ -1,13 +1,11 @@
 """FastAPI application entry point for SpecForge backend."""
 
-from typing import Union
-
 from fastapi import FastAPI
 import google.generativeai as genai
 
-from .config import settings
-from .database import connect_to_mongo, close_mongo_connection
-from .requirements.controllers.requirements_controller import router as requirements_router
+from backend.config.settings import settings
+from backend.config.database import connect_to_mongo, close_mongo_connection
+from backend.requirements.controllers.requirements_controller import router as requirements_router
 
 app = FastAPI()
 

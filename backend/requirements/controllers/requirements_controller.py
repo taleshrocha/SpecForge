@@ -3,9 +3,10 @@
 from typing import List
 from fastapi import APIRouter, HTTPException
 
-from ..models.requirement import Requirement
-from ..dtos.requirement_dto import RequirementDTO
-from ..services.requirements_service import RequirementsService
+from backend.requirements.dtos.requirement_dto import RequirementDTO
+from backend.requirements.models.requirement import Requirement
+from backend.requirements.services.requirements_service import RequirementsService
+
 
 router = APIRouter(prefix="/requirements", tags=["requirements"])
 
