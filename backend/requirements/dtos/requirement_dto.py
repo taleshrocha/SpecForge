@@ -1,6 +1,6 @@
 """Requirement DTO definitions for API requests and responses."""
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from backend.requirements.dtos.requirement_attributes_dto import RequirementAttributesDTO
@@ -12,7 +12,7 @@ class RequirementDTO(BaseModel):
     """DTO for creating a new requirement."""
     
     title: str
-    description: str
+    description: Optional[str] = None
     stakeholders: List[str]
     type: RequirementType
     attributes: RequirementAttributesDTO

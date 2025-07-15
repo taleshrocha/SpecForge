@@ -12,7 +12,7 @@ class Requirement(BaseModel):
     """Requirement model representing a software requirement."""
     _id: Optional[ObjectId] = None
     title: str
-    description: str
+    description: Optional[str]
     stakeholders: List[str]
     type: RequirementType
     attributes: RequirementAttributes
