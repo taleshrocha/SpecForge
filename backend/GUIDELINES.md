@@ -12,7 +12,7 @@
 
 ### Backend Architecture
 ```
-backend/
+backend/{package_name}/
 ├── models/           # Data models and entities
 │   ├── __init__.py
 │   ├── requirements.py
@@ -30,7 +30,7 @@ backend/
 │   ├── requirement_status.py
 │   ├── priority_level.py
 │   └── [other_enums].py
-└── app.py           # Flask application entry point
+└── main.py           # FastAPI application entry point
 ```
 
 ### Project Guidelines
@@ -58,7 +58,7 @@ backend/
 - **Purpose**: API endpoints and request handling
 - **Location**: `controllers/`
 - **Naming**: `{model_name}_controller.py` (e.g., `requirements_controller.py`)
-- **Content**: Flask blueprints, route handlers, request/response formatting
+- **Content**: FastAPI routers, route handlers, request/response formatting
 
 ### 4. Enums Layer
 - **Purpose**: Constants and enumerated values
@@ -79,7 +79,7 @@ from typing import List, Optional
 from datetime import datetime
 
 # Third-party imports
-from flask import Blueprint, request
+from fastapi import APIRouter, HTTPException
 
 # Local imports
 from ..models.requirements import Requirement
