@@ -1,2 +1,2 @@
-export * from './requirement'
-export * from './requirement-attributes'
+export * from './requirement.model'
+export * from './requirement-attributes.model'

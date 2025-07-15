@@ -1,4 +1,4 @@
-import { ComplexityLevel, PriorityLevel, RiskLevel } from "../enums";
+import { ComplexityLevel, PriorityLevel, RiskLevel } from "../enums/index.enum";
 
 /**
  * Type for requirement attributes metadata.

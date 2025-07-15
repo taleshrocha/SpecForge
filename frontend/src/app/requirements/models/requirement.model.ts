@@ -1,5 +1,5 @@
-import { RequirementStatus, RequirementType } from '../enums';
-import { RequirementAttributesDTO } from './requirement-attributes';
+import { RequirementStatus, RequirementType } from '../enums/index.enum';
+import { RequirementAttributesDTO } from './requirement-attributes.model';
 
 /**
  * Model for creating a new requirement.
