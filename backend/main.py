@@ -1,6 +1,7 @@
 """FastAPI application entry point for SpecForge backend."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 
 from backend.config.settings import settings
@@ -8,6 +9,15 @@ from backend.config.database import connect_to_mongo, close_mongo_connection
 from backend.requirements.controllers.requirements_controller import router as requirements_router
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:4200", "http://127.0.0.1:3000", "http://127.0.0.1:4200"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(requirements_router)
 
