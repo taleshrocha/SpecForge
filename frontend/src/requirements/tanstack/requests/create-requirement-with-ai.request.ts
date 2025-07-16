@@ -1,4 +1,4 @@
-import { api } from "@/app/core/services/api"
+import { api } from "@/core/services/api"
 import { REQUIREMENT } from "../routes"
 import { Requirement } from "../../models"
 

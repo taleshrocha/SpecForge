@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from "react"
-import { useGetAllRequirements } from "./requirements/tanstack/queries/use-get-all-requirements.query"
+import { useGetAllRequirements } from "../requirements/tanstack/queries/use-get-all-requirements.query"
 
 export default function Home() {
   const { data: requirements, isLoading, error } = useGetAllRequirements()
