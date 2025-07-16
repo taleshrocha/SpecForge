@@ -5,9 +5,9 @@ import { RequirementAttributesDTO } from './requirement-attributes.model';
  * Model for creating a new requirement.
  */
 export type Requirement = {
-  id: number;
+  id?: number;
   title: string;
-  description: string;
+  description?: string;
   stakeholders: string[];
   type: RequirementType;
   attributes: RequirementAttributesDTO;

@@ -8,9 +8,9 @@ import { ComplexityLevel, PriorityLevel, RiskLevel } from "../enums/index.enum";
  * complexity evaluation, and effort estimation.
  */
 export type RequirementAttributesDTO = {
-  id: number;
+  id?: number;
   priority: PriorityLevel;
   risk: RiskLevel;
   complexity: ComplexityLevel;
-  effortEstimation: number;
+  effort_estimation: number;
 }
