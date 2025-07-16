@@ -2,11 +2,14 @@
 
 from typing import List
 from fastapi import APIRouter, HTTPException
+import logging
 
 from backend.requirements.dtos.requirement_dto import RequirementDTO
 from backend.requirements.models.requirement import Requirement
 from backend.requirements.services.requirements_service import RequirementsService
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/requirement", tags=["requirement"])
 
@@ -51,11 +54,14 @@ async def get_requirements():
     Returns:
         List of all requirements.
     """
+    logger.info("GET /requirement endpoint called")
     service = RequirementsService()
     try:
         requirements = await service.get_all_requirements()
+        logger.info(f"Returning {len(requirements)} requirements")
         return requirements
     except Exception as e:
+        logger.error(f"Failed to retrieve requirements: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve requirements: {str(e)}")
 
 @router.get("/{requirement_id}", response_model=Requirement)
@@ -77,6 +83,9 @@ async def get_requirement(requirement_id: str):
         if requirement is None:
             raise HTTPException(status_code=404, detail="Requirement not found")
         return requirement
+    except HTTPException:
+        # Re-raise HTTPExceptions (like our 404) without wrapping them
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

@@ -16,7 +16,7 @@ interface RequirementDetailsProps {
  */
 export default function RequirementDetails({ params }: RequirementDetailsProps) {
   const router = useRouter()
-  const requirementId = parseInt(params.id)
+  const requirementId = params.id
   const { data: requirement, isLoading, isError } = useGetRequirement({ requirementId })
 
   /**
@@ -54,6 +54,8 @@ export default function RequirementDetails({ params }: RequirementDetailsProps) 
       </div>
     )
   }
+
+  console.log("requirement", requirement)
 
   if (isError || !requirement) {
     return (
@@ -93,7 +95,7 @@ export default function RequirementDetails({ params }: RequirementDetailsProps) 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
-                <p className="text-lg">{requirement.id || 'N/A'}</p>
+                <p className="text-lg">{requirement._id || 'N/A'}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Versão</label>

@@ -93,10 +93,10 @@ export default function RequirementsList() {
           <TableBody>
             {requirements.map((requirement) => (
               <TableRow
-                key={requirement.id}
-                onClick={() => requirement.id && handleRowClick(requirement.id)}
+                key={requirement._id}
+                onClick={() => requirement._id && handleRowClick(requirement._id)}
               >
-                <TableCell className="font-medium">{requirement.id || 'N/A'}</TableCell>
+                <TableCell className="font-medium">{requirement._id || 'N/A'}</TableCell>
                 <TableCell>{requirement.title}</TableCell>
                 <TableCell>
                   <Badge variant={getTypeVariant(requirement.type)}>

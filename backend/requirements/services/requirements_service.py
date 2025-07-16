@@ -2,12 +2,16 @@
 
 from typing import List, Optional
 from bson import ObjectId
+import logging
+from datetime import datetime
 
 from backend.requirements.models.requirement import Requirement
 from backend.config.database import get_database
 from backend.requirements.dtos.requirement_dto import RequirementDTO
 from backend.ai.services.gemini_service import GeminiService
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class RequirementsService:
     """Service class for handling requirement-related operations.
@@ -34,9 +38,11 @@ class RequirementsService:
             Exception: When database operation fails.
         """
         requirement_dict = requirement_data.model_dump()
+        requirement_dict['created_at'] = datetime.utcnow()
+        
         result = await self.db.requirements.insert_one(requirement_dict)
         created_requirement_doc = await self.db.requirements.find_one({"_id": result.inserted_id})
-        return Requirement(**created_requirement_doc)
+        return Requirement.from_mongo(created_requirement_doc)
     
     async def create_requirement_with_ai_description(self, requirement_dto: RequirementDTO) -> Requirement:
         """Create a new requirement with AI-generated description.
@@ -59,10 +65,11 @@ class RequirementsService:
             
             requirement_dict = requirement_dto.model_dump()
             requirement_dict['description'] = ai_generated_description
+            requirement_dict['created_at'] = datetime.utcnow()
             
             result = await self.db.requirements.insert_one(requirement_dict)
             created_requirement_doc = await self.db.requirements.find_one({"_id": result.inserted_id})
-            return Requirement(**created_requirement_doc)
+            return Requirement.from_mongo(created_requirement_doc)
             
         except Exception as e:
             raise Exception(f"Falha ao gerar descrição com IA ou salvar requisito: {str(e)}")
@@ -73,10 +80,21 @@ class RequirementsService:
         Returns:
             List of all requirements.
         """
-        requirements = []
-        async for requirement_doc in self.db.requirements.find():
-            requirements.append(Requirement(**requirement_doc))
-        return requirements
+        try:
+            logger.info("Fetching all requirements from database")
+            requirements = []
+            cursor = self.db.requirements.find()
+            count = 0
+            async for requirement_doc in cursor:
+                count += 1
+                logger.debug(f"Processing requirement {count}: {requirement_doc.get('_id')}")
+                requirements.append(Requirement.from_mongo(requirement_doc))
+            
+            logger.info(f"Successfully retrieved {len(requirements)} requirements")
+            return requirements
+        except Exception as e:
+            logger.error(f"Error retrieving requirements: {str(e)}")
+            raise Exception(f"Database error while retrieving requirements: {str(e)}")
     
     async def get_requirement_by_id(self, requirement_id: str) -> Optional[Requirement]:
         """Retrieve a specific requirement by its ID.
@@ -93,7 +111,10 @@ class RequirementsService:
         if not ObjectId.is_valid(requirement_id):
             raise ValueError("Invalid requirement ID format")
         
-        requirement_doc = await self.db.requirements.find_one({"_id": ObjectId(requirement_id)})
-        if requirement_doc:
-            return Requirement(**requirement_doc)
-        return None
+        try:
+            requirement_doc = await self.db.requirements.find_one({"_id": ObjectId(requirement_id)})
+            if requirement_doc:
+                return Requirement.from_mongo(requirement_doc)
+            return None
+        except Exception as e:
+            raise Exception(f"Database error while retrieving requirement: {str(e)}")

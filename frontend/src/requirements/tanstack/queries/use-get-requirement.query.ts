@@ -3,7 +3,7 @@ import { Requirement } from '../../models'
 import { getRequirement } from '../requests'
 
 type useGetRequirementProps = {
-  requirementId: number,
+  requirementId: string,
 }
 
 /**

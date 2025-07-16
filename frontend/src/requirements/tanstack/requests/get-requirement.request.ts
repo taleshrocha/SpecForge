@@ -1,9 +1,11 @@
 import { api } from "../../../core/services/api"
 import { REQUIREMENT } from "../routes"
 type getRequirementRequestProps = {
-    requirementId: number
+    requirementId: string
 }
 
-export const getRequirement = async ({ requirementId }: getRequirementRequestProps) =>
-    (await api.get(`${REQUIREMENT}/${requirementId}`)).data.data
+export const getRequirement = async ({ requirementId }: getRequirementRequestProps) => {
+    const response = await api.get(`${REQUIREMENT}/${requirementId}`)
+    return response.data
+}
 
