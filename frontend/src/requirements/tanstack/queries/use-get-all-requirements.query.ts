@@ -4,11 +4,12 @@ import { getAllRequirements } from '../requests/get-all-requirements.request'
 
 /**
  * Hook to fetch all requirements from the API
+ * @param stakeholder Optional stakeholder filter
  * @returns Query result containing array of requirements
  */
-export function useGetAllRequirements() {
+export function useGetAllRequirements(stakeholder?: string) {
     return useQuery<Requirement[]>({
-        queryKey: ['REQUIREMENTS'],
-        queryFn: getAllRequirements
+        queryKey: ['REQUIREMENTS', stakeholder],
+        queryFn: () => getAllRequirements(stakeholder)
     })
 }
