@@ -9,7 +9,8 @@ type createWiegersMatrixProps = {
 export async function createWiegersMatrix({ requirementIds }: createWiegersMatrixProps) {
   const response = await api.post<WiegersMatrix[]>(
     `${REQUIREMENT}/wiegers/analyze`,
-    requirementIds
+    {requirement_ids : requirementIds}
+    
   )
 
   return response.data

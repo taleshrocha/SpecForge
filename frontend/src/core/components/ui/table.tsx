@@ -34,6 +34,7 @@ interface TableCellProps {
 interface TableHeadProps {
   children: ReactNode
   className?: string
+  onClick?: () => void
 }
 
 /**
@@ -106,14 +107,19 @@ export function TableRow({ children, className, onClick }: TableRowProps) {
  * Table header cell component
  * @param children - Cell content
  * @param className - Additional CSS classes
+ * @param onClick - Click handler for header cell
  * @returns JSX element representing the table header cell
  */
-export function TableHead({ children, className }: TableHeadProps) {
+export function TableHead({ children, className, onClick }: TableHeadProps) {
   return (
-    <th className={clsx(
-      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
-      className
-    )}>
+    <th 
+      className={clsx(
+        "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+        onClick && "cursor-pointer",
+        className
+      )}
+      onClick={onClick}
+    >
       {children}
     </th>
   )

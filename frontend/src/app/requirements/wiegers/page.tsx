@@ -1,131 +1,166 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useGetAllRequirements } from '../../../requirements/tanstack/queries/use-get-all-requirements.query'
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, Badge } from '../../../core/components'
-import { RequirementType, RequirementStatus } from '../../../requirements/enums/index.enum'
+import { useCreateWiegersMatrix } from '../../../requirements/tanstack/mutations/use-create-wiegers-matrix'
+import { WiegersMatrix } from '../../../requirements/models/wiegers-matrix.model'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../core/components/ui/table'
+import { Button } from '../../../core/components/form'
 
-/**
- * Requirements list page component displaying all requirements in a table format
- * @returns JSX element representing the requirements list page
- */
-export default function RequirementsList() {
-  const router = useRouter()
-  const { data: requirements, isLoading, isError } = useGetAllRequirements()
+type SortField = keyof WiegersMatrix
+type SortDirection = 'asc' | 'desc'
 
-  /**
-   * Handles navigation to requirement details page
-   * @param requirementId - ID of the requirement to view
-   */
-  const handleRowClick = (requirementId: number) => {
-    router.push(`/requirements/${requirementId}`)
+export default function WiegersPage() {
+  const [selectedRequirements, setSelectedRequirements] = useState<string[]>([])
+  const [wiegersMatrix, setWiegersMatrix] = useState<WiegersMatrix[]>([])
+  const [sortField, setSortField] = useState<SortField>('priority')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+
+  const { data: requirements, isLoading: isLoadingRequirements } = useGetAllRequirements()
+  const { mutate: createMatrix, isPending: isCreatingMatrix } = useCreateWiegersMatrix()
+
+  const handleRequirementToggle = (requirementId: string) => {
+    setSelectedRequirements(prev => 
+      prev.includes(requirementId)
+        ? prev.filter(id => id !== requirementId)
+        : [...prev, requirementId]
+    )
   }
 
-  /**
-   * Gets the appropriate badge variant for requirement status
-   * @param status - Requirement status
-   * @returns Badge variant string
-   */
-  const getStatusVariant = (status?: RequirementStatus) => {
-    if (!status) return 'outline'
-    switch (status) {
-      case RequirementStatus.APPROVED:
-        return 'default'
-      case RequirementStatus.DRAFT:
-        return 'secondary'
-      case RequirementStatus.REJECTED:
-        return 'destructive'
-      default:
-        return 'outline'
+  const handleCreateMatrix = () => {
+    if (selectedRequirements.length > 0) {
+      createMatrix(selectedRequirements, {
+        onSuccess: (data) => {
+          setWiegersMatrix(data)
+        }
+      })
     }
   }
 
-  /**
-   * Gets the appropriate badge variant for requirement type
-   * @param type - Requirement type
-   * @returns Badge variant string
-   */
-  const getTypeVariant = (type: RequirementType) => {
-    return type === RequirementType.FUNCTIONAL ? 'default' : 'secondary'
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('desc')
+    }
   }
 
-  if (isLoading) {
-    return (
-      <div className="max-w-6xl mx-auto p-8">
-        <div className="text-center">Carregando requisitos...</div>
-      </div>
-    )
-  }
+  const sortedMatrix = wiegersMatrix ? [...wiegersMatrix].sort((a, b) => {
+    const aValue = a[sortField]
+    const bValue = b[sortField]
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue)
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue
+    }
+    
+    return 0
+  }) : []
 
-  if (isError) {
-    return (
-      <div className="max-w-6xl mx-auto p-8">
-        <div className="text-center text-red-600">Erro ao carregar requisitos.</div>
-      </div>
-    )
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return '↕️'
+    return sortDirection === 'asc' ? '↑' : '↓'
   }
 
   return (
     <div className="max-w-6xl mx-auto p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Lista de Requisitos</h1>
-        <button
-          onClick={() => router.push('/requirements/create')}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <h1 className="text-2xl font-bold mb-6">Matriz de Wiegers</h1>
+      
+      {/* Requirements Selection */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold mb-4">Selecionar Requisitos</h2>
+        {isLoadingRequirements ? (
+          <p>Carregando requisitos...</p>
+        ) : (
+          <div className="space-y-2 max-h-60 overflow-y-auto border p-4 rounded">
+            {requirements?.map((requirement) => (
+              <label key={requirement._id} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedRequirements.includes(requirement._id?.toString() || '')}
+                  onChange={() => handleRequirementToggle(requirement._id?.toString() || '')}
+                  className="rounded"
+                />
+                <span>{requirement.title}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        
+        <Button
+          onClick={handleCreateMatrix}
+          disabled={selectedRequirements.length === 0 || isCreatingMatrix}
+          loading={isCreatingMatrix}
+          className="mt-4"
         >
-          Criar Requisito
-        </button>
+          Criar Tabela Wiegers
+        </Button>
       </div>
 
-      {requirements && requirements.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Título</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Prioridade</TableHead>
-              <TableHead>Versão</TableHead>
-              <TableHead>Stakeholders</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {requirements.map((requirement) => (
-              <TableRow
-                key={requirement._id}
-                onClick={() => requirement._id && handleRowClick(requirement._id)}
-              >
-                <TableCell className="font-medium">{requirement._id || 'N/A'}</TableCell>
-                <TableCell>{requirement.title}</TableCell>
-                <TableCell>
-                  <Badge variant={getTypeVariant(requirement.type)}>
-                    {requirement.type === RequirementType.FUNCTIONAL ? 'Funcional' : 'Não Funcional'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getStatusVariant(requirement.status)}>
-                    {requirement.status || 'Não definido'}
-                  </Badge>
-                </TableCell>
-                <TableCell>{requirement.attributes?.priority || 'N/A'}</TableCell>
-                <TableCell>{requirement.version}</TableCell>
-                <TableCell>
-                  {requirement.stakeholders && requirement.stakeholders.length > 0 ? requirement.stakeholders.join(', ') : 'Nenhum'}
-                </TableCell>
+      {/* Wiegers Matrix Table */}
+      {wiegersMatrix && wiegersMatrix.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Matriz de Wiegers</h2>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('requirement_title')}
+                >
+                  Requisito {getSortIcon('requirement_title')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('value')}
+                >
+                  Valor {getSortIcon('value')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('cost')}
+                >
+                  Custo {getSortIcon('cost')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('risk')}
+                >
+                  Risco {getSortIcon('risk')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('urgency')}
+                >
+                  Urgência {getSortIcon('urgency')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort('priority')}
+                >
+                  Prioridade {getSortIcon('priority')}
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-500 mb-4">Nenhum requisito encontrado.</p>
-          <button
-            onClick={() => router.push('/requirements/create')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Criar Primeiro Requisito
-          </button>
+            </TableHeader>
+            <TableBody>
+              {sortedMatrix.map((item, index) => (
+                <TableRow key={item.id || index}>
+                  <TableCell>{item.requirement_title}</TableCell>
+                  <TableCell>{item.value}</TableCell>
+                  <TableCell>{item.cost}</TableCell>
+                  <TableCell>{item.risk}</TableCell>
+                  <TableCell>{item.urgency}</TableCell>
+                  <TableCell className="font-semibold">{item.priority}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>
