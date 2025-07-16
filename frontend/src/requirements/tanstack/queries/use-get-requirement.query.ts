@@ -6,10 +6,15 @@ type useGetRequirementProps = {
   requirementId: number,
 }
 
+/**
+ * Hook to fetch a single requirement by ID
+ * @param requirementId - The ID of the requirement to fetch
+ * @returns Query result containing the requirement data
+ */
 export function useGetRequirement({ requirementId: requirementId }: useGetRequirementProps
 ) {
   return useQuery<Requirement>({
-    queryKey: ['PAGE', requirementId],
+    queryKey: ['REQUIREMENT', requirementId],
     queryFn: () => getRequirement({ requirementId })
   })
 }

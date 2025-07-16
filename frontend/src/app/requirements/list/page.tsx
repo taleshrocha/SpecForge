@@ -1,141 +1,131 @@
 'use client'
 
-import { useState } from 'react'
-import { useCreateRequirementWithAi } from '../../../requirements/tanstack/mutations/use-create-requirement-with-ai'
-import { RequirementType, RequirementStatus, PriorityLevel, RiskLevel, ComplexityLevel } from '../../../requirements/enums/index.enum'
-import { Requirement } from '../../../requirements/models'
+import { useRouter } from 'next/navigation'
+import { useGetAllRequirements } from '../../../requirements/tanstack/queries/use-get-all-requirements.query'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, Badge } from '../../../core/components'
+import { RequirementType, RequirementStatus } from '../../../requirements/enums/index.enum'
 
-export default function CreateRequirement() {
-  const [formData, setFormData] = useState({
-    title: '',
-    type: RequirementType.FUNCTIONAL,
-    stakeholders: '',
-    context: '',
-    version: '1.0.0'
-  })
+/**
+ * Requirements list page component displaying all requirements in a table format
+ * @returns JSX element representing the requirements list page
+ */
+export default function RequirementsList() {
+  const router = useRouter()
+  const { data: requirements, isLoading, isError } = useGetAllRequirements()
 
-  const {mutate: onCreateRequirement, isPending: isPendingCrateRequirement, isError: isErrorCreateRequirement} = useCreateRequirementWithAi()
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  /**
+   * Handles navigation to requirement details page
+   * @param requirementId - ID of the requirement to view
+   */
+  const handleRowClick = (requirementId: number) => {
+    router.push(`/requirements/${requirementId}`)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    const requirement: Requirement = {
-      title: formData.title,
-      stakeholders: formData.stakeholders.split(',').map(s => s.trim()).filter(s => s),
-      type: formData.type as RequirementType,
-    attributes: {
-        priority: PriorityLevel.HIGH,
-        risk: RiskLevel.CRITICAL,
-        complexity: ComplexityLevel.HIGH,
-        effort_estimation: 80
-      },
-      version: formData.version,
-      status: RequirementStatus.DRAFT
+  /**
+   * Gets the appropriate badge variant for requirement status
+   * @param status - Requirement status
+   * @returns Badge variant string
+   */
+  const getStatusVariant = (status?: RequirementStatus) => {
+    if (!status) return 'outline'
+    switch (status) {
+      case RequirementStatus.APPROVED:
+        return 'default'
+      case RequirementStatus.DRAFT:
+        return 'secondary'
+      case RequirementStatus.REJECTED:
+        return 'destructive'
+      default:
+        return 'outline'
     }
+  }
 
-    onCreateRequirement(requirement, {
-      onSuccess: () => {
-      setFormData({
-        title: '',
-        type: RequirementType.FUNCTIONAL,
-        stakeholders: '',
-        context: '',
-        version: '1.0.0'
-      })
-      },
-      onError: () => {
-        console.error("Erro ao criar requisito.")
-      }
-    })
+  /**
+   * Gets the appropriate badge variant for requirement type
+   * @param type - Requirement type
+   * @returns Badge variant string
+   */
+  const getTypeVariant = (type: RequirementType) => {
+    return type === RequirementType.FUNCTIONAL ? 'default' : 'secondary'
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mx-auto p-8">
+        <div className="text-center">Carregando requisitos...</div>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-6xl mx-auto p-8">
+        <div className="text-center text-red-600">Erro ao carregar requisitos.</div>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Criar Novo Requisito</h1>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            Nome do Requisito *
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-            Tipo *
-          </label>
-          <select
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleInputChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value={RequirementType.FUNCTIONAL}>Funcional</option>
-            <option value={RequirementType.NON_FUNCTIONAL}>Não Funcional</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="stakeholders" className="block text-sm font-medium text-gray-700 mb-2">
-            Stakeholders
-          </label>
-          <input
-            type="text"
-            id="stakeholders"
-            name="stakeholders"
-            value={formData.stakeholders}
-            onChange={handleInputChange}
-            placeholder="Separe múltiplos stakeholders por vírgula"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-sm text-gray-500 mt-1">Exemplo: Product Owner, Developer, QA Tester</p>
-        </div>
-
-        <div>
-          <label htmlFor="version" className="block text-sm font-medium text-gray-700 mb-2">
-            Versão
-          </label>
-          <input
-            type="text"
-            id="version"
-            name="version"
-            value={formData.version}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
+    <div className="max-w-6xl mx-auto p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Lista de Requisitos</h1>
         <button
-          type="submit"
-          disabled={isPendingCrateRequirement }
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => router.push('/requirements/create')}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          {isPendingCrateRequirement ? 'Criando...' : 'Criar Requisito'}
+          Criar Requisito
         </button>
-      </form>
+      </div>
 
-      {isErrorCreateRequirement && (
-        <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          Erro ao criar requisito. Tente novamente.
+      {requirements && requirements.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Título</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Prioridade</TableHead>
+              <TableHead>Versão</TableHead>
+              <TableHead>Stakeholders</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {requirements.map((requirement) => (
+              <TableRow
+                key={requirement.id}
+                onClick={() => requirement.id && handleRowClick(requirement.id)}
+              >
+                <TableCell className="font-medium">{requirement.id || 'N/A'}</TableCell>
+                <TableCell>{requirement.title}</TableCell>
+                <TableCell>
+                  <Badge variant={getTypeVariant(requirement.type)}>
+                    {requirement.type === RequirementType.FUNCTIONAL ? 'Funcional' : 'Não Funcional'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusVariant(requirement.status)}>
+                    {requirement.status || 'Não definido'}
+                  </Badge>
+                </TableCell>
+                <TableCell>{requirement.attributes?.priority || 'N/A'}</TableCell>
+                <TableCell>{requirement.version}</TableCell>
+                <TableCell>
+                  {requirement.stakeholders && requirement.stakeholders.length > 0 ? requirement.stakeholders.join(', ') : 'Nenhum'}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">Nenhum requisito encontrado.</p>
+          <button
+            onClick={() => router.push('/requirements/create')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Criar Primeiro Requisito
+          </button>
         </div>
       )}
     </div>
