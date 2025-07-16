@@ -74,11 +74,14 @@ class RequirementsService:
         except Exception as e:
             raise Exception(f"Falha ao gerar descrição com IA ou salvar requisito: {str(e)}")
     
-    async def get_all_requirements(self) -> List[Requirement]:
+    async def get_all_requirements(self, stakeholder_name: Optional[str] = None) -> List[Requirement]:
         """Retrieve all requirements from the database.
         
+        Args:
+            stakeholder_name: Optional stakeholder name to sort requirements by priority
+        
         Returns:
-            List of all requirements.
+            List of all requirements, optionally sorted by stakeholder priority.
         """
         try:
             logger.info("Fetching all requirements from database")
@@ -91,6 +94,35 @@ class RequirementsService:
                 requirements.append(Requirement.from_mongo(requirement_doc))
             
             logger.info(f"Successfully retrieved {len(requirements)} requirements")
+            
+            # Sort by stakeholder priority if stakeholder_name is provided
+            if stakeholder_name and requirements:
+                try:
+                    logger.info(f"Sorting requirements by stakeholder priority: {stakeholder_name}")
+                    sorted_ids = await self.gemini_service.sort_requirements_by_stakeholder(
+                        requirements, stakeholder_name
+                    )
+                    
+                    # Create a mapping of requirement ID to requirement object
+                    req_map = {req.id: req for req in requirements}
+                    
+                    # Sort requirements based on AI response
+                    sorted_requirements = []
+                    for req_id in sorted_ids:
+                        if req_id in req_map:
+                            sorted_requirements.append(req_map[req_id])
+                    
+                    # Add any remaining requirements that weren't in the AI response
+                    remaining_requirements = [req for req in requirements if req.id not in sorted_ids]
+                    sorted_requirements.extend(remaining_requirements)
+                    
+                    logger.info(f"Successfully sorted requirements for stakeholder: {stakeholder_name}")
+                    return sorted_requirements
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to sort by stakeholder priority, returning unsorted list: {str(e)}")
+                    return requirements
+            
             return requirements
         except Exception as e:
             logger.error(f"Error retrieving requirements: {str(e)}")

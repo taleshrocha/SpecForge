@@ -1,7 +1,7 @@
 """Requirements API controller for handling requirement-related endpoints."""
 
-from typing import List
-from fastapi import APIRouter, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
 import logging
 
@@ -55,16 +55,19 @@ async def create_requirement_with_ai_description(requirement: RequirementDTO):
         raise HTTPException(status_code=500, detail=f"Failed to create requirement with AI description: {str(e)}")
 
 @router.get("", response_model=List[Requirement])
-async def get_requirements():
+async def get_requirements(stakeholder: Optional[str] = Query(None, description="Nome da parte interessada para ordenação por prioridade")):
     """Get all requirements.
     
+    Args:
+        stakeholder: Optional stakeholder name to sort requirements by priority
+    
     Returns:
-        List of all requirements.
+        List of all requirements, optionally sorted by stakeholder priority.
     """
-    logger.info("GET /requirement endpoint called")
+    logger.info(f"GET /requirement endpoint called with stakeholder: {stakeholder}")
     service = RequirementsService()
     try:
-        requirements = await service.get_all_requirements()
+        requirements = await service.get_all_requirements(stakeholder_name=stakeholder)
         logger.info(f"Returning {len(requirements)} requirements")
         return requirements
     except Exception as e:

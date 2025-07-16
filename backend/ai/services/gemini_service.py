@@ -114,3 +114,56 @@ class GeminiService:
             return json.loads(response_text.strip())
         except Exception as e:
             raise Exception(f"Falha ao gerar análise Wiegers com IA: {str(e)}")
+    
+    async def sort_requirements_by_stakeholder(self, requirements: List[Requirement], stakeholder_name: str) -> List[str]:
+        """Sort requirements based on stakeholder priorities using Gemini AI.
+        
+        Args:
+            requirements: List of requirement objects
+            stakeholder_name: Name of the stakeholder to consider for sorting
+            
+        Returns:
+            List of requirement IDs sorted by priority for the given stakeholder
+            
+        Raises:
+            Exception: When AI generation fails
+        """
+        requirements_text = ""
+        for req in requirements:
+            requirements_text += f"- ID: {req.id}, Título: {req.title}, Descrição: {req.description or 'N/A'}, Tipo: {req.type.value}, Partes Interessadas: {', '.join(req.stakeholders)}\n"
+        
+        prompt = f"""
+        Você é um especialista em Engenharia de Requisitos. Só me entregue o json.
+
+        Considere os seguintes requisitos:
+        {requirements_text}
+
+        Ordene estes requisitos por prioridade considerando a perspectiva da parte interessada: "{stakeholder_name}".
+        
+        Leve em consideração:
+        - Relevância do requisito para a parte interessada específica
+        - Impacto direto nas responsabilidades/objetivos dessa parte interessada
+        - Urgência do ponto de vista dessa parte interessada
+        - Valor de negócio para essa parte interessada
+
+        Retorne um JSON com a lista de IDs dos requisitos ordenados por prioridade (do mais importante para o menos importante):
+
+        {{
+            "sorted_requirement_ids": ["id1", "id2", "id3", ...]
+        }}
+        """
+        
+        try:
+            response = self.model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Remove markdown code blocks if present
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            
+            result = json.loads(response_text.strip())
+            return result.get("sorted_requirement_ids", [])
+        except Exception as e:
+            raise Exception(f"Falha ao ordenar requisitos por parte interessada com IA: {str(e)}")
