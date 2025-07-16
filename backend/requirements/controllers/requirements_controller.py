@@ -1,17 +1,24 @@
 """Requirements API controller for handling requirement-related endpoints."""
 
 from typing import List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
 import logging
 
 from backend.requirements.dtos.requirement_dto import RequirementDTO
 from backend.requirements.models.requirement import Requirement
 from backend.requirements.services.requirements_service import RequirementsService
+from backend.requirements.models.wiegers_matrix import WiegersMatrix
+from backend.requirements.services.wiegers_service import WiegersService
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/requirement", tags=["requirement"])
+
+class WiegersAnalysisRequest(BaseModel):
+    """Request model for Wiegers matrix analysis."""
+    requirement_ids: List[str]
 
 @router.post("", response_model=Requirement)
 async def create_requirement(requirement: RequirementDTO):
@@ -90,3 +97,72 @@ async def get_requirement(requirement_id: str):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve requirement: {str(e)}")
+
+@router.post("/wiegers/analyze", response_model=List[WiegersMatrix])
+async def analyze_requirements(request: WiegersAnalysisRequest):
+    """Generate Wiegers matrix analysis for requirements using AI.
+    
+    Args:
+        request: Request containing list of requirement IDs
+        
+    Returns:
+        List of created WiegersMatrix objects ordered by priority
+        
+    Raises:
+        HTTPException: When analysis fails
+    """
+    wiegers_service = WiegersService()
+    try:
+        matrices = await wiegers_service.generate_and_save_matrices(request.requirement_ids)
+        return matrices
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+@router.get("/wiegers", response_model=List[WiegersMatrix])
+async def get_all_matrices():
+    """Get all Wiegers matrices ordered by priority.
+    
+    Returns:
+        List of WiegersMatrix objects
+    """
+    wiegers_service = WiegersService()
+    try:
+        return await wiegers_service.get_all()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao buscar matrizes Wiegers: {str(e)}"
+        )
+
+@router.get("/wiegers/{requirement_id}", response_model=WiegersMatrix)
+async def get_matrix_by_requirement(requirement_id: str):
+    """Get Wiegers matrix by requirement ID.
+    
+    Args:
+        requirement_id: The requirement ID
+        
+    Returns:
+        WiegersMatrix object
+        
+    Raises:
+        HTTPException: When matrix not found
+    """
+    wiegers_service = WiegersService()
+    try:
+        matrix = await wiegers_service.get_by_requirement_id(requirement_id)
+        if not matrix:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Matriz Wiegers não encontrada para este requisito"
+            )
+        return matrix
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao buscar matriz Wiegers: {str(e)}"
+        )
