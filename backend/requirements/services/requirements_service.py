@@ -92,7 +92,12 @@ class RequirementsService:
             async for requirement_doc in cursor:
                 count += 1
                 logger.debug(f"Processing requirement {count}: {requirement_doc.get('_id')}")
-                requirements.append(Requirement.from_mongo(requirement_doc))
+                try:
+                    requirement = Requirement.from_mongo(requirement_doc)
+                    requirements.append(requirement)
+                except Exception as validation_error:
+                    logger.warning(f"Skipping requirement {requirement_doc.get('_id')} due to validation error: {str(validation_error)}")
+                    continue
             
             logger.info(f"Successfully retrieved {len(requirements)} requirements")
             
