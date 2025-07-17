@@ -34,7 +34,8 @@ class WiegersMatrix(BaseModel):
     
     def calculate_priority(self) -> float:
         """Calculate priority using Wiegers formula: (value + urgency) - (cost + risk)."""
-        self.priority = float((self.value + self.urgency) - (self.cost + self.risk))
+        calculated_priority = float((self.value + self.urgency) - (self.cost + self.risk))
+        self.priority = max(0.0, calculated_priority)
         return self.priority
     
     @classmethod

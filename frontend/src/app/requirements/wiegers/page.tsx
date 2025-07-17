@@ -27,6 +27,17 @@ export default function WiegersPage() {
     )
   }
 
+  const handleSelectAll = () => {
+    if (selectedRequirements.length === requirements?.length) {
+      setSelectedRequirements([])
+    } else {
+      setSelectedRequirements(requirements?.map(req => req._id?.toString() || '') || [])
+    }
+  }
+
+  const isAllSelected = requirements && selectedRequirements.length === requirements.length
+  const isIndeterminate = selectedRequirements.length > 0 && selectedRequirements.length < (requirements?.length || 0)
+
   const handleCreateMatrix = () => {
     if (selectedRequirements.length > 0) {
       createMatrix(selectedRequirements, {
@@ -79,6 +90,18 @@ export default function WiegersPage() {
           <p>Carregando requisitos...</p>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto border p-4 rounded">
+            <label className="flex items-center space-x-2 border-b pb-2 mb-2">
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                ref={(el) => {
+                  if (el) el.indeterminate = !!isIndeterminate
+                }}
+                onChange={handleSelectAll}
+                className="rounded"
+              />
+              <span className="font-medium">Selecionar Todos</span>
+            </label>
             {requirements?.map((requirement) => (
               <label key={requirement._id} className="flex items-center space-x-2">
                 <input
