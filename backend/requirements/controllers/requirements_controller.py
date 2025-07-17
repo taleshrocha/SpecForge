@@ -74,6 +74,23 @@ async def get_requirements(stakeholder: Optional[str] = Query(None, description=
         logger.error(f"Failed to retrieve requirements: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve requirements: {str(e)}")
 
+@router.get("/glossary", response_model=dict)
+async def generate_glossary():
+    """Generate a glossary of technical terms from all requirements using AI.
+    
+    Returns:
+        Dictionary with term names as keys and definitions as values.
+    """
+    logger.info("GET /requirement/glossary endpoint called")
+    service = RequirementsService()
+    try:
+        glossary = await service.generate_glossary()
+        logger.info(f"Generated glossary with {len(glossary)} terms")
+        return glossary
+    except Exception as e:
+        logger.error(f"Failed to generate glossary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate glossary: {str(e)}")
+
 @router.get("/{requirement_id}", response_model=Requirement)
 async def get_requirement(requirement_id: str):
     """Get a specific requirement by ID.

@@ -150,3 +150,32 @@ class RequirementsService:
             return None
         except Exception as e:
             raise Exception(f"Database error while retrieving requirement: {str(e)}")
+    
+    async def generate_glossary(self) -> dict:
+        """Generate a glossary from all requirements using AI.
+        
+        Returns:
+            Dictionary with term names as keys and definitions as values.
+            
+        Raises:
+            Exception: When AI generation or database operation fails.
+        """
+        try:
+            logger.info("Generating glossary from all requirements")
+            
+            # Get all requirements
+            requirements = await self.get_all_requirements()
+            
+            if not requirements:
+                logger.warning("No requirements found for glossary generation")
+                return {}
+            
+            # Generate glossary using AI
+            glossary = await self.gemini_service.generate_glossary(requirements)
+            
+            logger.info(f"Successfully generated glossary with {len(glossary)} terms")
+            return glossary
+            
+        except Exception as e:
+            logger.error(f"Error generating glossary: {str(e)}")
+            raise Exception(f"Failed to generate glossary: {str(e)}")

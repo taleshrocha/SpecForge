@@ -167,3 +167,45 @@ class GeminiService:
             return result.get("sorted_requirement_ids", [])
         except Exception as e:
             raise Exception(f"Falha ao ordenar requisitos por parte interessada com IA: {str(e)}")
+    
+    async def generate_glossary(self, requirements: List[Requirement]) -> Dict[str, str]:
+        """Generate a glossary of technical terms from requirements using Gemini AI.
+        
+        Args:
+            requirements: List of requirement objects
+            
+        Returns:
+            Dictionary with term names as keys and definitions as values
+            
+        Raises:
+            Exception: When AI generation fails
+        """
+        requirements_text = ""
+        for req in requirements:
+            requirements_text += f"Título: {req.title}\n"
+            if req.description:
+                requirements_text += f"Descrição: {req.description}\n"
+            requirements_text += f"Tipo: {req.type.value}\n"
+            requirements_text += f"Partes Interessadas: {', '.join(req.stakeholders)}\n\n"
+        
+        prompt = f"""
+        A partir dos requisitos a seguir: {requirements_text}, identifique termos técnicos ou ambíguos que devem ser incluídos em um glossário. Sugira definições claras e compreensíveis. RETORNE APENAS UMA LISTA JSON como no exemplo:
+        [
+            "Apólice": "Contrato formal entre a seguradora e o segurado, que detalha as coberturas, os prêmios e as condições do seguro.",
+            "Fatura Recorrente": "Cobrança gerada automaticamente em intervalos predefinidos (e.g., mensalmente, anualmente) para um cliente."
+        ]
+        """
+        
+        try:
+            response = self.model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Remove markdown code blocks if present
+            if response_text.startswith("```json"):
+                response_text = response_text[7:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            
+            return json.loads(response_text.strip())
+        except Exception as e:
+            raise Exception(f"Falha ao gerar glossário com IA: {str(e)}")
