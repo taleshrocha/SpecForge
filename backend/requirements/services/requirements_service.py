@@ -60,7 +60,8 @@ class RequirementsService:
             ai_generated_description = await self.gemini_service.generate_requirement_description(
                 title=requirement_dto.title,
                 requirement_type=requirement_dto.type,
-                stakeholders=requirement_dto.stakeholders
+                stakeholders=requirement_dto.stakeholders,
+                details=requirement_dto.details if requirement_dto.details is not None else ""
             )
             
             requirement_dict = requirement_dto.model_dump()

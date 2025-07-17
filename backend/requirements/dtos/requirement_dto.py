@@ -12,6 +12,7 @@ class RequirementDTO(BaseModel):
     """DTO for creating a new requirement."""
     
     title: str
+    details: Optional[str] = None
     description: Optional[str] = None
     stakeholders: List[str]
     type: RequirementType

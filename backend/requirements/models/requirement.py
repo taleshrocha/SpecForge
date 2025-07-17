@@ -15,6 +15,7 @@ class Requirement(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     created_at: Optional[datetime] = None
     title: str
+    details: Optional[str]
     description: Optional[str]
     stakeholders: List[str]
     type: RequirementType

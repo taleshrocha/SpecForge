@@ -8,6 +8,7 @@ export type Requirement = {
   _id?: number;
   title: string;
   description?: string;
+  details?: string;
   stakeholders: string[];
   type: RequirementType;
   attributes: RequirementAttributesDTO;

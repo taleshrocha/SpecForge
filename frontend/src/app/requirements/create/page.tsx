@@ -17,6 +17,7 @@ export default function CreateRequirement() {
     type: RequirementType.FUNCTIONAL,
     stakeholders: '',
     context: '',
+    details: '',
     version: '1.0.0'
   })
 
@@ -43,6 +44,7 @@ export default function CreateRequirement() {
     
     const requirement: Requirement = {
       title: formData.title,
+      details: formData.details || undefined,
       stakeholders: formData.stakeholders.split(',').map(s => s.trim()).filter(s => s),
       type: formData.type as RequirementType,
       attributes: {
@@ -62,6 +64,7 @@ export default function CreateRequirement() {
           type: RequirementType.FUNCTIONAL,
           stakeholders: '',
           context: '',
+          details: '',
           version: '1.0.0'
         })
         router.push('/requirements/list')
@@ -131,6 +134,21 @@ export default function CreateRequirement() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-sm text-gray-500 mt-1">Exemplo: Product Owner, Developer, QA Tester</p>
+        </div>
+
+        <div>
+          <label htmlFor="details" className="block text-sm font-medium text-gray-700 mb-2">
+            Detalhes
+          </label>
+          <textarea
+            id="details"
+            name="details"
+            value={formData.details}
+            onChange={handleInputChange}
+            rows={4}
+            placeholder="Descreva os detalhes do requisito (opcional)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         <div>

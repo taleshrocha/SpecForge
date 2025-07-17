@@ -15,7 +15,7 @@ class GeminiService:
         genai.configure(api_key=settings.GEMINI_API_KEY)
         self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
     
-    async def generate_requirement_description(self, title: str, requirement_type: str, stakeholders: list) -> str:
+    async def generate_requirement_description(self, title: str, requirement_type: str, stakeholders: list, details: str) -> str:
         """Generate a detailed requirement description using Gemini AI.
         
         Args:
@@ -30,17 +30,16 @@ class GeminiService:
             Exception: When AI generation fails
         """
         prompt = f"""
-        Com base nas seguintes informações do requisito, gere uma descrição detalhada e clara:
+        Com base nas seguintes informações do requisito, gere uma descrição em texto puro, sem markdown
         
         Título: {title}
         Tipo: {requirement_type}
+        Detalhes: {details}
         Partes Interessadas: {', '.join(stakeholders)}
         
         Por favor, forneça uma descrição abrangente que inclua:
         - Propósito e objetivos
         - Funcionalidades principais
-        - Resultados esperados
-        - Quaisquer considerações técnicas relevantes
         
         Mantenha a descrição profissional e adequada para um documento de requisitos de software.
         Responda em português brasileiro.
