@@ -10,6 +10,8 @@ from backend.requirements.models.requirement import Requirement
 from backend.requirements.services.requirements_service import RequirementsService
 from backend.requirements.models.wiegers_matrix import WiegersMatrix
 from backend.requirements.services.wiegers_service import WiegersService
+from backend.requirements.models.glossary import Glossary
+from backend.requirements.services.glossary_service import GlossaryService
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -74,22 +76,48 @@ async def get_requirements(stakeholder: Optional[str] = Query(None, description=
         logger.error(f"Failed to retrieve requirements: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve requirements: {str(e)}")
 
-@router.get("/glossary", response_model=dict)
-async def generate_glossary():
-    """Generate a glossary of technical terms from all requirements using AI.
+@router.post("/glossary", response_model=Glossary)
+async def generate_and_save_glossary():
+    """Generate a new glossary from all requirements and save it to database.
+    
+    Removes any existing glossary and creates a new one.
     
     Returns:
-        Dictionary with term names as keys and definitions as values.
+        The created glossary with terms and definitions.
     """
-    logger.info("GET /requirement/glossary endpoint called")
-    service = RequirementsService()
+    logger.info("POST /requirement/glossary endpoint called")
+    service = GlossaryService()
     try:
-        glossary = await service.generate_glossary()
-        logger.info(f"Generated glossary with {len(glossary)} terms")
+        glossary = await service.generate_and_save_glossary()
+        logger.info(f"Generated and saved glossary with {len(glossary.terms)} terms")
         return glossary
     except Exception as e:
-        logger.error(f"Failed to generate glossary: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate glossary: {str(e)}")
+        logger.error(f"Failed to generate and save glossary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate and save glossary: {str(e)}")
+
+@router.get("/glossary", response_model=Glossary)
+async def get_current_glossary():
+    """Get the current glossary from database.
+    
+    Returns:
+        The current glossary with terms and definitions.
+        
+    Raises:
+        HTTPException: When no glossary is found.
+    """
+    logger.info("GET /requirement/glossary endpoint called")
+    service = GlossaryService()
+    try:
+        glossary = await service.get_current_glossary()
+        if glossary is None:
+            raise HTTPException(status_code=404, detail="No glossary found. Generate one first using POST /requirement/glossary")
+        logger.info(f"Retrieved glossary with {len(glossary.terms)} terms")
+        return glossary
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to retrieve glossary: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve glossary: {str(e)}")
 
 @router.get("/{requirement_id}", response_model=Requirement)
 async def get_requirement(requirement_id: str):
